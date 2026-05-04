@@ -1,0 +1,240 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+  <meta http-equiv="Content-Style-Type" content="text/css">
+  <title></title>
+  <meta name="Generator" content="Cocoa HTML Writer">
+  <meta name="CocoaVersion" content="2685.4">
+  <style type="text/css">
+    p.p1 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica}
+    p.p2 {margin: 0.0px 0.0px 0.0px 0.0px; font: 12.0px Helvetica; min-height: 14.0px}
+  </style>
+</head>
+<body>
+<p class="p1">&lt;!DOCTYPE html&gt;</p>
+<p class="p1">&lt;html lang="zh-TW"&gt;</p>
+<p class="p1">&lt;head&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta charset="UTF-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;meta name="viewport" content="width=device-width, initial-scale=1.0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;title&gt;Point Chen 商品全台寄售店地圖&lt;/title&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://cdn.tailwindcss.com"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"&gt;&lt;/script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;style&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&amp;display=swap');</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>:root {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--vintage-green: #4c755d;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--beige: #fdfaf5;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>--dark-brown: #3d2b1f;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>body {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>font-family: 'Noto Sans TC', sans-serif;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--vintage-green);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>color: var(--beige);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>#map {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>height: 500px;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 100%;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 2rem;<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>z-index: 1;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>@media (min-width: 768px) {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>#map { height: 650px; }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* 自訂 Leaflet 彈出視窗樣式 */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.custom-popup .leaflet-popup-content-wrapper {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 1.2rem;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>padding: 0.5rem;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background-color: var(--beige);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border: 2px solid #d4c3a1;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.custom-popup .leaflet-popup-tip {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background: var(--beige);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* 自訂捲軸 */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#store-list::-webkit-scrollbar {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>width: 5px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#store-list::-webkit-scrollbar-track {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background: rgba(255, 255, 255, 0.1);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>#store-list::-webkit-scrollbar-thumb {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>background: rgba(255, 255, 255, 0.3);</p>
+<p class="p1"><span class="Apple-converted-space">            </span>border-radius: 10px;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>/* 標記動畫 */</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.marker-pin {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">        </span>.marker-pin:hover {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>transform: scale(1.3) translateY(-2px);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/style&gt;</p>
+<p class="p1">&lt;/head&gt;</p>
+<p class="p1">&lt;body class="p-4 md:p-8"&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;div class="max-w-6xl mx-auto"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;!-- 標題區 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;header class="mb-12 text-center relative"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="inline-block relative"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;h1 class="text-4xl md:text-5xl font-bold text-white mb-2 relative z-10 tracking-wider"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>Point Chen &lt;span class="text-[#d4c3a1]"&gt;Stockists&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/h1&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="absolute -bottom-2 left-0 w-full h-3 bg-[#3d5a47] opacity-60 -rotate-1 z-0"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p class="mt-4 text-stone-200/70 font-light tracking-[0.2em] flex items-center justify-center text-sm"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>由 北 至 南 寄 售 店 家 地 圖</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/header&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;div class="grid grid-cols-1 lg:grid-cols-12 gap-10"&gt;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;!-- 店家列表 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="lg:col-span-4 space-y-4"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="bg-[#fcf8f0] rounded-[2.5rem] p-6 shadow-2xl border border-white/20 flex flex-col h-full max-h-[700px]"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="flex items-center justify-between mb-6"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;h2 class="text-xl font-bold text-[#4c755d] flex items-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span class="bg-[#4c755d] text-white p-2 rounded-xl mr-3 shadow-md"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                    </span>&lt;path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" /&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                                </span>&lt;/svg&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>門市清單</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/h2&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;span class="bg-stone-200/50 px-3 py-1 rounded-full text-[10px] font-bold text-stone-500 uppercase tracking-tighter"&gt;8 Locations&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                    </span></p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="overflow-y-auto pr-2 space-y-3" id="store-list"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;!-- 店家卡片會由 JS 注入 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;!-- 地圖區 --&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="lg:col-span-8"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="relative"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="absolute -top-10 -right-10 w-32 h-32 bg-white/5 rounded-full blur-3xl"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div id="map" class="shadow-2xl border-[6px] border-white/10 ring-1 ring-white/5"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p2"><span class="Apple-converted-space">                </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="mt-8 flex flex-wrap gap-4 justify-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="bg-white/10 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 text-stone-200 text-xs flex items-center tracking-wide"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;span class="w-2 h-2 bg-[#d4c3a1] rounded-full mr-3 animate-pulse"&gt;&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>依地理位置由北向南排序</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;footer class="mt-16 mb-8 text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;div class="h-px w-24 bg-white/20 mx-auto mb-6"&gt;&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;p class="text-white/40 text-xs tracking-[0.3em] font-light italic"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>© POINT CHEN - A LITTLE BIT OF HAPPINESS</p>
+<p class="p1"><span class="Apple-converted-space">            </span>&lt;/p&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>&lt;/footer&gt;</p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/div&gt;</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;script&gt;</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const stores = [</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ id: 3, city: "台北", name: "田園城市生活風格書店", address: "台北市中山區中山北路二段72巷6號", lat: 25.0575, lng: 121.5225, mapUrl: "https://maps.app.goo.gl/yQitN9y5E79W6mUq6", color: "#a67b5b" },</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ id: 8, city: "台北", name: "飛地書店", address: "台北市萬華區中華路一段170-2號", lat: 25.0425, lng: 121.5075, mapUrl: "https://maps.app.goo.gl/nowhere", color: "#96694c" },</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ id: 1, city: "台北", name: "茉莉生活風格", address: "台北市中正區臨沂街27巷9-4號", lat: 25.0416, lng: 121.5303, mapUrl: "https://maps.app.goo.gl/9fFpvGfJds954GVP8", color: "#8a9a5b" },</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ id: 9, city: "台北", name: "Mangasick", address: "台北市中正區羅斯福路三段244巷10弄2號B1", lat: 25.0165, lng: 121.5315, mapUrl: "https://maps.app.goo.gl/mangasick", color: "#708090" },</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ id: 6, city: "桃園", name: "蒔絮行", address: "桃園市中壢區忠孝路246巷29弄41號", lat: 24.9745, lng: 121.2512, mapUrl: "https://maps.app.goo.gl/e7W3uR8K8H2P6zX7", color: "#556b2f" },</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ id: 7, city: "台南", name: "白丁書店", address: "台南市白河區三間厝40之13號", lat: 23.3445, lng: 120.4158, mapUrl: "https://maps.app.goo.gl/S9R2uD7K5V4X9wZ6", color: "#bc8f8f" },</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ id: 2, city: "高雄", name: "三餘書店", address: "高雄市新興區中正二路214號", lat: 22.6310, lng: 120.3155, mapUrl: "https://maps.app.goo.gl/35C1vXqC3C7V9T5e6", color: "#c19a6b" },</p>
+<p class="p1"><span class="Apple-converted-space">            </span>{ id: 4, city: "高雄", name: "駁二舊事倉庫", address: "高雄市鹽埕區大義街2號 (C8-1倉庫)", lat: 22.6191, lng: 120.2835, mapUrl: "https://maps.app.goo.gl/LzK8U4M6Z9J7P6wX9", color: "#6b8e23" }</p>
+<p class="p1"><span class="Apple-converted-space">        </span>];</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// 初始化地圖，中心點設在台灣中心</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const map = L.map('map', {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>zoomControl: false,</p>
+<p class="p1"><span class="Apple-converted-space">            </span>scrollWheelZoom: false // 避免捲動頁面時意外縮放地圖</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}).setView([23.7, 121], 7);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>attribution: '© CartoDB'</p>
+<p class="p1"><span class="Apple-converted-space">        </span>}).addTo(map);</p>
+<p class="p2"><span class="Apple-converted-space">        </span></p>
+<p class="p1"><span class="Apple-converted-space">        </span>L.control.zoom({ position: 'bottomright' }).addTo(map);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>const markers = [];</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const storeListContainer = document.getElementById('store-list');</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>stores.forEach((store, index) =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const customIcon = L.divIcon({</p>
+<p class="p1"><span class="Apple-converted-space">                </span>html: `&lt;div class="marker-pin" style="background-color: ${store.color}; width: 22px; height: 22px; border-radius: 50%; border: 3px solid #fdfaf5; box-shadow: 0 4px 8px rgba(0,0,0,0.3);"&gt;&lt;/div&gt;`,</p>
+<p class="p1"><span class="Apple-converted-space">                </span>className: '',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>iconSize: [22, 22],</p>
+<p class="p1"><span class="Apple-converted-space">                </span>iconAnchor: [11, 11]</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const marker = L.marker([store.lat, store.lng], { icon: customIcon }).addTo(map);</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>const popupContent = `</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="p-3 text-center"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold text-white mb-2 shadow-sm" style="background-color: ${store.color}"&gt;${store.city}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="text-lg font-bold text-[#3d2b1f] mb-1"&gt;${store.name}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="text-[11px] text-stone-500 mb-4 leading-relaxed"&gt;${store.address}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;a href="${store.mapUrl}" target="_blank" class="block w-full py-2.5 px-4 bg-[#4c755d] text-white rounded-xl text-sm font-bold hover:bg-[#3d5a47] transition-all shadow-md"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>前往 Google Map ➔</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/a&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>marker.bindPopup(popupContent, {<span class="Apple-converted-space"> </span></p>
+<p class="p1"><span class="Apple-converted-space">                </span>className: 'custom-popup',</p>
+<p class="p1"><span class="Apple-converted-space">                </span>maxWidth: 220</p>
+<p class="p1"><span class="Apple-converted-space">            </span>});</p>
+<p class="p1"><span class="Apple-converted-space">            </span>markers.push(marker);</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">            </span>// 列表卡片</p>
+<p class="p1"><span class="Apple-converted-space">            </span>const card = document.createElement('div');</p>
+<p class="p1"><span class="Apple-converted-space">            </span>card.className = 'group p-5 rounded-[1.8rem] bg-white hover:bg-[#fcf8f0] border border-stone-100 hover:border-[#d4c3a1] cursor-pointer transition-all duration-500 hover:shadow-xl hover:shadow-[#4c755d]/10';</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>card.innerHTML = `</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;div class="flex items-center gap-5"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0 border border-stone-100 group-hover:scale-110 transition-transform duration-500" style="background-color: ${store.color}; color: white; box-shadow: 0 4px 10px ${store.color}30"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>${index + 1}</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;div class="min-w-0"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="flex items-center gap-2 mb-0.5"&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                            </span>&lt;span class="text-[9px] font-bold uppercase tracking-widest text-[#4c755d] opacity-60"&gt;${store.city}&lt;/span&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="font-bold text-[#3d2b1f] text-base truncate group-hover:text-[#4c755d] transition-colors"&gt;${store.name}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                        </span>&lt;div class="text-[11px] text-stone-400 truncate mt-1"&gt;${store.address}&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">                </span>&lt;/div&gt;</p>
+<p class="p1"><span class="Apple-converted-space">            </span>`;</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>card.onclick = () =&gt; {</p>
+<p class="p1"><span class="Apple-converted-space">                </span>map.setView([store.lat, store.lng], 16);</p>
+<p class="p1"><span class="Apple-converted-space">                </span>marker.openPopup();</p>
+<p class="p1"><span class="Apple-converted-space">                </span>if (window.innerWidth &lt; 1024) {</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>const mapElement = document.getElementById('map');</p>
+<p class="p1"><span class="Apple-converted-space">                    </span>window.scrollTo({ top: mapElement.offsetTop - 80, behavior: 'smooth' });</p>
+<p class="p1"><span class="Apple-converted-space">                </span>}</p>
+<p class="p1"><span class="Apple-converted-space">            </span>};</p>
+<p class="p2"><span class="Apple-converted-space">            </span></p>
+<p class="p1"><span class="Apple-converted-space">            </span>storeListContainer.appendChild(card);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>});</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">        </span>// 重要：初始化時根據所有點位調整地圖邊界，確保完整顯示台灣分佈</p>
+<p class="p1"><span class="Apple-converted-space">        </span>const group = new L.featureGroup(markers);</p>
+<p class="p1"><span class="Apple-converted-space">        </span>map.fitBounds(group.getBounds().pad(0.15)); // 加入 15% 的邊距讓視覺不擁擠</p>
+<p class="p2"><br></p>
+<p class="p1"><span class="Apple-converted-space">    </span>&lt;/script&gt;</p>
+<p class="p1">&lt;/body&gt;</p>
+<p class="p1">&lt;/html&gt;</p>
+</body>
+</html>
