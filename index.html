@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Point Chen 商品全台寄售店地圖</title>
+    <title>Point Chen | 寄售門市散步地圖</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@400;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@300;400;700&display=swap');
         
         :root {
             --vintage-green: #4c755d;
@@ -19,186 +19,294 @@
         body {
             font-family: 'Noto Sans TC', sans-serif;
             background-color: var(--vintage-green);
+            background-image: url("https://www.transparenttextures.com/patterns/felt.png");
             color: var(--beige);
             margin: 0;
             padding: 0;
         }
 
         #map { 
-            height: 350px; 
+            height: 380px; 
             width: 100%; 
-            border-radius: 2rem; 
+            border-radius: 2.5rem; 
             z-index: 1;
         }
 
         @media (min-width: 768px) {
-            #map { height: 600px; }
+            #map { height: 720px; }
+        }
+
+        /* 簽名檔樣式優化 */
+        .brand-signature {
+            max-height:20px;
+            width: auto;
+            display: block;
+            margin: 0 auto;
         }
 
         .custom-popup .leaflet-popup-content-wrapper {
-            border-radius: 1.2rem;
-            padding: 0.5rem;
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+            border-radius: 1.5rem;
+            padding: 0;
+            overflow: hidden;
             background-color: var(--beige);
-            border: 2px solid #d4c3a1;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        
+        .custom-popup .leaflet-popup-content {
+            margin: 0;
+            width: 250px !important;
             color: var(--dark-brown);
         }
-        .custom-popup .leaflet-popup-tip {
-            background: var(--beige);
+
+        .custom-popup .leaflet-popup-tip { background: var(--beige); }
+
+        #store-list::-webkit-scrollbar { width: 4px; }
+        #store-list::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
         }
 
-        #store-list::-webkit-scrollbar {
-            width: 5px;
-        }
-        #store-list::-webkit-scrollbar-track {
-            background: rgba(255, 255, 255, 0.1);
-        }
-        #store-list::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.3);
-            border-radius: 10px;
+        .filter-btn.active {
+            background-color: white;
+            color: var(--vintage-green);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
         }
 
         .marker-pin {
             transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             cursor: pointer;
         }
-        .marker-pin:hover {
-            transform: scale(1.3) translateY(-2px);
+
+        .no-scrollbar::-webkit-scrollbar { display: none; }
+        .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+
+        .product-tag {
+            background-color: rgba(76, 117, 93, 0.08);
+            color: var(--vintage-green);
+            padding: 2px 8px;
+            border-radius: 6px;
+            font-size: 10px;
+            font-weight: 700;
+            display: inline-block;
+            margin-right: 4px;
+            margin-bottom: 4px;
         }
     </style>
 </head>
-<body class="p-4 md:p-8">
+<body class="p-4 md:p-10">
 
     <div class="max-w-6xl mx-auto">
         <header class="mb-10 text-center relative">
             <div class="inline-block relative">
-                <h1 class="text-4xl md:text-5xl font-bold text-white mb-2 relative z-10 tracking-wider">
-                    Point Chen <span class="text-[#d4c3a1]">Stockists</span>
-                </h1>
-                <div class="absolute -bottom-2 left-0 w-full h-3 bg-[#3d5a47] opacity-60 -rotate-1 z-0"></div>
+                <!-- 直接讀取 GitHub 上的絕對網址，且不使用任何濾鏡，確保白字簽名能完美顯示 -->
+                <img src="https://github.com/chenpoint-git/pointchen-map/blob/main/signature.png?raw=true" 
+                     class="brand-signature mb-2" 
+                     alt="Point Chen Signature">
             </div>
-            <p class="mt-4 text-stone-200/70 font-light tracking-[0.2em] flex items-center justify-center text-sm">
-                由 北 至 南 寄 售 店 家 地 圖
+            <p class="mt-2 text-stone-200/60 font-light tracking-[0.4em] uppercase text-xs md:text-sm">
+                Authorized Stockists Guide
             </p>
         </header>
 
         <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            <!-- 地圖區：在手機版 order-1 (優先顯示)，電腦版 order-2 -->
-            <div class="lg:col-span-8 order-1 lg:order-2">
-                <div class="relative">
-                    <div id="map" class="shadow-2xl border-[6px] border-white/10 ring-1 ring-white/5"></div>
+            
+            <div class="lg:col-span-8 order-1 lg:order-2 space-y-6">
+                <div class="relative group">
+                    <button onclick="locateMe()" class="absolute top-4 right-4 z-[1000] bg-white text-stone-700 p-3 rounded-full shadow-xl hover:bg-stone-100 transition-all active:scale-95">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z" />
+                        </svg>
+                    </button>
+                    <div id="map" class="shadow-2xl border-[8px] border-white/5 ring-1 ring-white/10"></div>
                 </div>
-                <div class="mt-6 flex flex-wrap gap-4 justify-center">
-                    <div class="bg-white/10 backdrop-blur-md px-6 py-3 rounded-2xl border border-white/10 text-stone-200 text-xs flex items-center tracking-wide">
-                        <span class="w-2 h-2 bg-[#d4c3a1] rounded-full mr-3 animate-pulse"></span>
-                        點擊小圓點開啟 Google Map 導航
+                
+                <div class="bg-white/5 backdrop-blur-sm rounded-3xl p-6 flex flex-col md:flex-row items-center justify-between gap-4 border border-white/10">
+                    <div class="flex items-center gap-3 text-stone-300">
+                        <span class="flex h-3 w-3 rounded-full bg-yellow-400 animate-ping"></span>
+                        <p class="text-sm font-light italic">「 點擊標記查看店內實景與品項 」</p>
                     </div>
+                    <button onclick="resetMap()" class="text-xs uppercase tracking-widest text-white/50 hover:text-white transition-colors">重置全台視角</button>
                 </div>
             </div>
 
-            <!-- 店家列表：在手機版 order-2 (排在後面)，電腦版 order-1 -->
-            <div class="lg:col-span-4 space-y-4 order-2 lg:order-1">
-                <div class="bg-[#fcf8f0] rounded-[2.5rem] p-6 shadow-2xl border border-white/20 flex flex-col h-full max-h-[650px]">
-                    <div class="flex items-center justify-between mb-6">
-                        <h2 class="text-xl font-bold text-[#4c755d] flex items-center">
-                            <span class="bg-[#4c755d] text-white p-2 rounded-xl mr-3 shadow-md">
-                                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                                    <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                                </svg>
-                            </span>
-                            門市清單
-                        </h2>
-                        <span class="bg-stone-200/50 px-3 py-1 rounded-full text-[10px] font-bold text-stone-500 tracking-tighter uppercase">8 Locations</span>
+            <div class="lg:col-span-4 flex flex-col order-2 lg:order-1 space-y-4">
+                <div class="flex gap-2 overflow-x-auto pb-1 no-scrollbar" id="city-filters">
+                    <button onclick="filterCity('all')" class="filter-btn active shrink-0 px-5 py-2.5 rounded-full bg-white/10 text-xs font-bold tracking-widest transition-all border border-white/5 uppercase">All</button>
+                    <button onclick="filterCity('台北')" class="filter-btn shrink-0 px-5 py-2.5 rounded-full bg-white/10 text-xs font-bold tracking-widest transition-all border border-white/5">台北</button>
+                    <button onclick="filterCity('桃園')" class="filter-btn shrink-0 px-5 py-2.5 rounded-full bg-white/10 text-xs font-bold tracking-widest transition-all border border-white/5">桃園</button>
+                    <button onclick="filterCity('台南')" class="filter-btn shrink-0 px-5 py-2.5 rounded-full bg-white/10 text-xs font-bold tracking-widest transition-all border border-white/5">台南</button>
+                    <button onclick="filterCity('高雄')" class="filter-btn shrink-0 px-5 py-2.5 rounded-full bg-white/10 text-xs font-bold tracking-widest transition-all border border-white/5">高雄</button>
+                </div>
+
+                <div class="bg-[#fcf8f0] rounded-[2.5rem] p-6 md:p-8 shadow-2xl flex flex-col h-full max-h-[650px] border border-white/20 text-stone-800">
+                    <div class="flex items-center justify-between mb-8 px-2">
+                        <h2 class="text-2xl font-bold text-[#4c755d] tracking-tight">寄售門市</h2>
+                        <span id="store-count" class="bg-stone-100 px-3 py-1 rounded-full text-[10px] font-black text-stone-400 tracking-widest uppercase">8 Locations</span>
                     </div>
-                    <div class="overflow-y-auto pr-2 space-y-3" id="store-list"></div>
+                    <div class="overflow-y-auto pr-1 space-y-6" id="store-list"></div>
                 </div>
             </div>
         </div>
 
-        <footer class="mt-16 mb-8 text-center">
-            <div class="h-px w-24 bg-white/20 mx-auto mb-6"></div>
-            <p class="text-white/40 text-xs tracking-[0.3em] font-light italic uppercase">
-                © Point Chen - A little bit of happiness
-            </p>
+        <footer class="mt-16 mb-8 text-center text-white/20 text-[10px] tracking-[0.5em] font-light italic uppercase">
+            © Point Chen - A Little bit of happiness
         </footer>
     </div>
 
     <script>
+        // 全部改回您提供的 GitHub 絕對網址，保證在哪裡都能正確顯示照片！
         const stores = [
-            { id: 1, city: "台北", name: "田園城市生活風格書店", address: "台北市中山區中山北路二段72巷6號", lat: 25.0575, lng: 121.5225, mapUrl: "https://www.google.com/maps/search/?api=1&query=田園城市生活風格書店", color: "#a67b5b" },
-            { id: 2, city: "台北", name: "飛地書店", address: "台北市萬華區中華路一段170-2號", lat: 25.0425, lng: 121.5075, mapUrl: "https://www.google.com/maps/search/?api=1&query=飛地Nowhere", color: "#96694c" },
-            { id: 3, city: "台北", name: "茉莉生活風格", address: "台北市中正區臨沂街27巷9-4號", lat: 25.0416, lng: 121.5303, mapUrl: "https://www.google.com/maps/search/?api=1&query=茉莉生活風格", color: "#8a9a5b" },
-            { id: 4, city: "台北", name: "Mangasick", address: "台北市中正區羅斯福路三段244巷10弄2號B1", lat: 25.0165, lng: 121.5315, mapUrl: "https://www.google.com/maps/search/?api=1&query=Mangasick", color: "#708090" },
-            { id: 5, city: "桃園", name: "蒔絮行", address: "桃園市中壢區忠孝路246巷29弄41號", lat: 24.9745, lng: 121.2512, mapUrl: "https://www.google.com/maps/search/?api=1&query=蒔絮行", color: "#556b2f" },
-            { id: 6, city: "台南", name: "白丁書店", address: "台南市白河區三間厝40之13號", lat: 23.3445, lng: 120.4158, mapUrl: "https://www.google.com/maps/search/?api=1&query=白丁書店", color: "#bc8f8f" },
-            { id: 7, city: "高雄", name: "三餘書店", address: "高雄市新興區中正二路214號", lat: 22.6310, lng: 120.3155, mapUrl: "https://www.google.com/maps/search/?api=1&query=三餘書店", color: "#c19a6b" },
-            { id: 8, city: "高雄", name: "駁二舊事倉庫", address: "高雄市鹽埕區大義街2號C8-1倉庫", lat: 22.6191, lng: 120.2835, mapUrl: "https://www.google.com/maps/search/?api=1&query=駁二舊事倉庫", color: "#6b8e23" }
+            { 
+                id: 3, city: "台北", name: "田園城市生活風格書店", 
+                img: "https://github.com/chenpoint-git/pointchen-map/blob/main/田園.jpg?raw=true", 
+                products: ["小誌", "貼紙", "明信片", "壓克力夾", "海報"], 
+                address: "台北市中山區中山北路二段72巷6號", lat: 25.0575, lng: 121.5225, 
+                mapUrl: "https://www.google.com/maps/search/?api=1&query=田園城市生活風格書店", color: "#a67b5b" 
+            },
+            { 
+                id: 8, city: "台北", name: "飛地書店", 
+                img: "https://github.com/chenpoint-git/pointchen-map/blob/main/飛地.jpg?raw=true", 
+                products: ["小誌"], 
+                address: "台北市萬華區中華路一段170-2號", lat: 25.0425, lng: 121.5075, 
+                mapUrl: "https://www.google.com/maps/search/?api=1&query=飛地書店", color: "#96694c" 
+            },
+            { 
+                id: 1, city: "台北", name: "茉莉生活風格", 
+                img: "https://github.com/chenpoint-git/pointchen-map/blob/main/茉莉.jpg?raw=true", 
+                products: ["小誌", "貼紙", "明信片", "海報", "便條本", "壓克力鑰匙圈"], 
+                address: "台北市中正區臨沂街27巷9-4號", lat: 25.0416, lng: 121.5303, 
+                mapUrl: "https://www.google.com/maps/search/?api=1&query=茉莉生活風格", color: "#8a9a5b" 
+            },
+            { 
+                id: 9, city: "台北", name: "Mangasick", 
+                img: "https://github.com/chenpoint-git/pointchen-map/blob/main/mangasick.jpg?raw=true", 
+                products: ["小誌"], 
+                address: "台北市中正區羅斯福路三段244巷10弄2號B1", lat: 25.0165, lng: 121.5315, 
+                mapUrl: "https://www.google.com/maps/search/?api=1&query=Mangasick", color: "#708090" 
+            },
+            { 
+                id: 6, city: "桃園", name: "蒔絮行", 
+                img: "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=400", 
+                products: ["小誌", "貼紙", "明信片", "壓克力鑰匙圈", "資料夾"], 
+                address: "桃園市中壢區忠孝路246巷29弄41號", lat: 24.9745, lng: 121.2512, 
+                mapUrl: "https://www.google.com/maps/search/?api=1&query=蒔絮行", color: "#556b2f" 
+            },
+            { 
+                id: 7, city: "台南", name: "白丁書店", 
+                img: "https://github.com/chenpoint-git/pointchen-map/blob/main/白丁.jpg?raw=true", 
+                products: ["小誌", "貼紙", "明信片", "鑰匙圈", "資料夾", "便條本"], 
+                address: "台南市白河區三間厝40之13號", lat: 23.3445, lng: 120.4158, 
+                mapUrl: "https://www.google.com/maps/search/?api=1&query=白丁書店", color: "#bc8f8f" 
+            },
+            { 
+                id: 2, city: "高雄", name: "三餘書店", 
+                img: "https://github.com/chenpoint-git/pointchen-map/blob/main/三餘.jpg?raw=true", 
+                products: ["小誌"], 
+                address: "高雄市新興區中正二路214號", lat: 22.6310, lng: 120.3155, 
+                mapUrl: "https://www.google.com/maps/search/?api=1&query=三餘書店", color: "#c19a6b" 
+            },
+            { 
+                id: 4, city: "高雄", name: "駁二舊事倉庫", 
+                img: "https://github.com/chenpoint-git/pointchen-map/blob/main/舊事倉庫.jpg?raw=true", 
+                products: ["小誌", "貼紙", "明信片", "壓克力夾", "資料夾", "海報"], 
+                address: "高雄市鹽埕區大義街2號C8-1倉庫", lat: 22.6191, lng: 120.2835, 
+                mapUrl: "https://www.google.com/maps/search/?api=1&query=駁二舊事倉庫", color: "#6b8e23" 
+            }
         ];
 
-        const map = L.map('map', {
-            zoomControl: false,
-            scrollWheelZoom: false
-        }).setView([23.7, 121], 7);
-
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager_labels_under/{z}/{x}/{y}{r}.png', {
-            attribution: '© CartoDB'
-        }).addTo(map);
-        
+        const map = L.map('map', { zoomControl: false, scrollWheelZoom: false }).setView([23.7, 121], 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png').addTo(map);
         L.control.zoom({ position: 'bottomright' }).addTo(map);
 
-        const markers = [];
+        const markers = {};
         const storeListContainer = document.getElementById('store-list');
 
-        stores.forEach((store, index) => {
-            const customIcon = L.divIcon({
-                html: `<div class="marker-pin" style="background-color: ${store.color}; width: 22px; height: 22px; border-radius: 50%; border: 3px solid #fdfaf5; box-shadow: 0 4px 8px rgba(0,0,0,0.3);"></div>`,
-                className: '',
-                iconSize: [22, 22],
-                iconAnchor: [11, 11]
-            });
-
-            const marker = L.marker([store.lat, store.lng], { icon: customIcon }).addTo(map);
-            const popupContent = `
-                <div class="p-3 text-center">
-                    <div class="inline-block px-2 py-0.5 rounded-full text-[10px] font-bold text-white mb-2 shadow-sm" style="background-color: ${store.color}">${store.city}</div>
-                    <div class="text-lg font-bold text-[#3d2b1f] mb-1">${store.name}</div>
-                    <div class="text-[11px] text-stone-500 mb-4 leading-relaxed">${store.address}</div>
-                    <a href="${store.mapUrl}" target="_blank" class="block w-full py-2.5 px-4 bg-[#4c755d] text-white rounded-xl text-sm font-bold hover:bg-[#3d5a47] transition-all shadow-md">前往 Google Map ➔</a>
-                </div>
-            `;
-            marker.bindPopup(popupContent, { className: 'custom-popup', maxWidth: 220 });
-            markers.push(marker);
-
-            const card = document.createElement('div');
-            card.className = 'group p-5 rounded-[1.8rem] bg-white hover:bg-[#fcf8f0] border border-stone-100 hover:border-[#d4c3a1] cursor-pointer transition-all duration-500 hover:shadow-xl hover:shadow-[#4c755d]/10';
-            card.innerHTML = `
-                <div class="flex items-center gap-5">
-                    <div class="w-11 h-11 rounded-full flex items-center justify-center text-sm font-bold shrink-0 border border-stone-100 group-hover:scale-110 transition-transform duration-500" style="background-color: ${store.color}; color: white; box-shadow: 0 4px 10px ${store.color}30">
-                        ${index + 1}
-                    </div>
-                    <div class="min-w-0">
-                        <div class="flex items-center gap-2 mb-0.5">
-                            <span class="text-[9px] font-bold uppercase tracking-widest text-[#4c755d] opacity-60">${store.city}</span>
+        function renderStores(filterCity = 'all') {
+            storeListContainer.innerHTML = '';
+            const currentMarkersArray = [];
+            
+            stores.forEach((store) => {
+                if (markers[store.id]) map.removeLayer(markers[store.id]);
+                if (filterCity !== 'all' && store.city !== filterCity) return;
+                
+                const customIcon = L.divIcon({
+                    html: `<div class="marker-pin" style="background-color: ${store.color}; width: 24px; height: 24px; border-radius: 50%; border: 4px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.3);"></div>`,
+                    className: '', iconSize: [24, 24], iconAnchor: [12, 12]
+                });
+                const marker = L.marker([store.lat, store.lng], { icon: customIcon }).addTo(map);
+                
+                marker.bindPopup(`
+                    <div class="flex flex-col">
+                        <div class="w-full h-28 bg-stone-200 overflow-hidden">
+                            <img src="${store.img}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/400x200?text=PC'">
                         </div>
-                        <div class="font-bold text-[#3d2b1f] text-base truncate group-hover:text-[#4c755d] transition-colors">${store.name}</div>
-                        <div class="text-[11px] text-stone-400 truncate mt-1">${store.address}</div>
+                        <div class="p-4 text-center">
+                            <p class="text-base font-bold text-[#3d2b1f] mb-1">${store.name}</p>
+                            <div class="flex flex-wrap justify-center gap-1 mb-4">
+                                ${store.products.map(p => `<span style="font-size: 8px; background: #eee; padding: 1px 4px; border-radius: 4px;">${p}</span>`).join('')}
+                            </div>
+                            <a href="${store.mapUrl}" target="_blank" class="block w-full bg-[#4c755d] text-white py-2.5 rounded-xl text-xs font-bold shadow-md">開啟導航 ➔</a>
+                        </div>
                     </div>
-                </div>
-            `;
-            card.onclick = () => {
-                map.setView([store.lat, store.lng], 16);
-                marker.openPopup();
-                // 在手機版中點擊清單時，會向上捲動到地圖位置
-                if (window.innerWidth < 1024) {
-                    const mapElement = document.getElementById('map');
-                    window.scrollTo({ top: mapElement.offsetTop - 40, behavior: 'smooth' });
-                }
-            };
-            storeListContainer.appendChild(card);
+                `, { className: 'custom-popup' });
+                
+                markers[store.id] = marker;
+                currentMarkersArray.push(marker);
+
+                const card = document.createElement('div');
+                card.className = 'group flex items-center gap-4 cursor-pointer transition-all duration-300 hover:translate-x-1';
+                card.innerHTML = `
+                    <div class="w-16 h-16 rounded-2xl overflow-hidden shrink-0 shadow-md border-2 border-white group-hover:rotate-3 transition-transform">
+                        <img src="${store.img}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/200x200?text=PC'">
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <span class="text-[8px] font-black uppercase tracking-widest text-[#4c755d] opacity-50">${store.city}</span>
+                        <h3 class="font-bold text-[#3d2b1f] text-base truncate group-hover:text-[#4c755d] transition-colors">${store.name}</h3>
+                        <div class="mt-1 flex flex-wrap h-5 overflow-hidden">
+                            ${store.products.map(p => `<span class="product-tag">${p}</span>`).join('')}
+                        </div>
+                    </div>
+                `;
+                
+                card.onclick = () => {
+                    map.setView([store.lat, store.lng], 16);
+                    marker.openPopup();
+                    if (window.innerWidth < 1024) window.scrollTo({ top: document.getElementById('map').offsetTop - 60, behavior: 'smooth' });
+                };
+                storeListContainer.appendChild(card);
+            });
+            
+            document.getElementById('store-count').textContent = `${currentMarkersArray.length} Locations`;
+            if (currentMarkersArray.length > 0) {
+                const group = new L.featureGroup(currentMarkersArray);
+                map.fitBounds(group.getBounds().pad(0.2));
+            }
+        }
+
+        function filterCity(city) {
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.currentTarget.classList.add('active');
+            renderStores(city);
+        }
+
+        function resetMap() {
+            const currentMarkers = Object.values(markers).filter(m => map.hasLayer(m));
+            if (currentMarkers.length > 0) {
+                const group = new L.featureGroup(currentMarkers);
+                map.fitBounds(group.getBounds().pad(0.2));
+            }
+        }
+
+        function locateMe() {
+            map.locate({setView: true, maxZoom: 14});
+        }
+
+        map.on('locationfound', (e) => {
+            L.circle(e.latlng, e.accuracy, { color: '#4c755d', weight: 1, fillOpacity: 0.1 }).addTo(map);
         });
 
-        const group = new L.featureGroup(markers);
-        map.fitBounds(group.getBounds().pad(0.15));
+        renderStores();
     </script>
 </body>
 </html>
